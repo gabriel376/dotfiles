@@ -1,0 +1,9 @@
+[core]
+    editor = emacs -nw
+[init]
+    defaultBranch = master
+[pull]
+    rebase = true
+[user]
+    name  = Gabriel
+    email = gabriel376@hotmail.com
