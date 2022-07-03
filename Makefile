@@ -6,5 +6,5 @@ ifeq ($(shell id -u), 0)
 	cp doas/doas.conf /etc/
 else
 	cp shell/profile ~/.profile
-	cp -R git/ ~/.config/
+	cp -R git/ ksh/ ~/.config/
 endif

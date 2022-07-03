@@ -1,0 +1,7 @@
+HISTCONTROL=ignoredups
+HISTFILE="$HOME/.config/ksh/ksh_history"
+HISTSIZE=10000
+PS1="\u@\H:\w \$ "
+
+set -o emacs
+stty -ixon
