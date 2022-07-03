@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# make backup
+
+if [ ! -r "$1" ] ; then
+    printf "%s: cannot access '%s': No such file or directory\n" "$0" "$1" 1>&2
+    exit 1
+fi
+
+cp -rv "$1" "${1%/}.$(date +%Y%m%dT%H%M%S).bak"

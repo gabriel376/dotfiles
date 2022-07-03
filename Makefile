@@ -7,4 +7,5 @@ ifeq ($(shell id -u), 0)
 else
 	cp shell/profile ~/.profile
 	cp -R fontconfig/ git/ ksh/ ~/.config/
+	cp -R bin/ ~/
 endif

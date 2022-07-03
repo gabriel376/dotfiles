@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# pipe editor
+
+temp=$(mktemp)
+trap "rm $temp" EXIT
+cat >"$temp"
+$EDITOR "$temp" </dev/tty >/dev/tty
+cat "$temp"
+unset temp
