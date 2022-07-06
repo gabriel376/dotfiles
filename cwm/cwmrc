@@ -1,0 +1,128 @@
+borderwidth     2
+fontname        "monospace"
+gap             10 10 10 10
+htile           50
+moveamount      1
+snapdist        0
+sticky          yes
+vtile           50
+
+color       activeborder    "#ffffff"
+color       font            "#ffffff"
+color       groupborder     "#00ff00"
+color       inactiveborder  "#000000"
+color       menubg          "#000000"
+color       menufg          "#ffffff"
+color       selfont         "#000000"
+color       ungroupborder   "#ff0000"
+color       urgencyborder   "#ff0000"
+
+command     lock       "xlock"
+command     term       "xterm -e tmux"
+
+unbind-key  all
+bind-key    4-g         window-group
+bind-key    4-h         window-hide
+bind-key    4-l         window-lower
+bind-key    4-m         window-maximize
+bind-key    4-r         window-raise
+bind-key    4-s         window-stick
+bind-key    4-t         group-toggle-all
+bind-key    4C-1        group-toggle-1
+bind-key    4C-2        group-toggle-2
+bind-key    4C-3        group-toggle-3
+bind-key    4C-4        group-toggle-4
+bind-key    4C-5        group-toggle-5
+bind-key    4C-6        group-toggle-6
+bind-key    4C-7        group-toggle-7
+bind-key    4C-8        group-toggle-8
+bind-key    4C-9        group-toggle-9
+bind-key    4C-Down     window-resize-down
+bind-key    4C-Left     window-resize-left
+bind-key    4C-Right    window-resize-right
+bind-key    4C-Tab      group-cycle
+bind-key    4C-Up       window-resize-up
+bind-key    4C-h        window-htile
+bind-key    4C-l        group-last
+bind-key    4C-v        window-vtile
+bind-key    4CM-Down    pointer-move-down
+bind-key    4CM-Left    pointer-move-left
+bind-key    4CM-Right   pointer-move-right
+bind-key    4CM-Up      pointer-move-up
+bind-key    4CMS-1      group-close-1
+bind-key    4CMS-2      group-close-2
+bind-key    4CMS-3      group-close-3
+bind-key    4CMS-4      group-close-4
+bind-key    4CMS-5      group-close-5
+bind-key    4CMS-6      group-close-6
+bind-key    4CMS-7      group-close-7
+bind-key    4CMS-8      group-close-8
+bind-key    4CMS-9      group-close-9
+bind-key    4CMS-Down   pointer-move-down-big
+bind-key    4CMS-Left   pointer-move-left-big
+bind-key    4CMS-Right  pointer-move-right-big
+bind-key    4CMS-Up     pointer-move-up-big
+bind-key    4CMS-l      lock
+bind-key    4CMS-q      quit
+bind-key    4CMS-r      restart
+bind-key    4CS-Down    window-resize-down-big
+bind-key    4CS-Left    window-resize-left-big
+bind-key    4CS-Right   window-resize-right-big
+bind-key    4CS-Tab     group-rcycle
+bind-key    4CS-Up      window-resize-up-big
+bind-key    4M-1        window-movetogroup-1
+bind-key    4M-2        window-movetogroup-2
+bind-key    4M-3        window-movetogroup-3
+bind-key    4M-4        window-movetogroup-4
+bind-key    4M-5        window-movetogroup-5
+bind-key    4M-6        window-movetogroup-6
+bind-key    4M-7        window-movetogroup-7
+bind-key    4M-8        window-movetogroup-8
+bind-key    4M-9        window-movetogroup-9
+bind-key    4M-Down     window-snap-down
+bind-key    4M-Left     window-snap-left
+bind-key    4M-Right    window-snap-right
+bind-key    4M-Tab      window-cycle-ingroup
+bind-key    4M-Up       window-snap-up
+bind-key    4M-c        menu-cmd
+bind-key    4M-e        menu-exec
+bind-key    4M-g        menu-group
+bind-key    4M-h        menu-window-hidden
+bind-key    4M-l        window-menu-label
+bind-key    4M-w        menu-window
+bind-key    4MS-Tab     window-rcycle-ingroup
+bind-key    4S-Down     window-move-down-big
+bind-key    4S-Left     window-move-left-big
+bind-key    4S-Right    window-move-right-big
+bind-key    4S-Tab      window-rcycle
+bind-key    4S-Up       window-move-up-big
+bind-key    4S-f        window-freeze
+bind-key    4S-h        window-hmaximize
+bind-key    4S-v        window-vmaximize
+bind-key    4-1         group-only-1
+bind-key    4-2         group-only-2
+bind-key    4-3         group-only-3
+bind-key    4-4         group-only-4
+bind-key    4-5         group-only-5
+bind-key    4-6         group-only-6
+bind-key    4-7         group-only-7
+bind-key    4-8         group-only-8
+bind-key    4-9         group-only-9
+bind-key    4-Down      window-move-down
+bind-key    4-Left      window-move-left
+bind-key    4-Return    terminal
+bind-key    4-Right     window-move-right
+bind-key    4-Tab       window-cycle
+bind-key    4-Up        window-move-up
+bind-key    4-c         window-close
+bind-key    4-f         window-fullscreen
+
+unbind-mouse all
+bind-mouse   4C-1       window-maximize
+bind-mouse   4C-3       window-fullscreen
+bind-mouse   4M-1       window-close
+bind-mouse   4M-3       window-hide
+bind-mouse   4S-1       window-move
+bind-mouse   4S-3       window-resize
+bind-mouse   4-1        window-raise
+bind-mouse   4-3        window-lower
