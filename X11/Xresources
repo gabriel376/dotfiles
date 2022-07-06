@@ -1,0 +1,48 @@
+xterm*faceName: monospace
+xterm*faceSize: 12
+
+xterm*background: black
+xterm*foreground: white
+
+xterm*cursorBlink: false
+xterm*cursorColor: white
+
+xterm*highlightColor:     white
+xterm*highlightTextColor: black
+xterm*highlightReverse:   false
+
+xterm*color0:  black
+xterm*color1:  red3
+xterm*color2:  green3
+xterm*color3:  yellow3
+xterm*color4:  blue3
+xterm*color5:  magenta3
+xterm*color6:  cyan3
+xterm*color7:  gray90
+xterm*color8:  gray50
+xterm*color9:  red
+xterm*color10: green
+xterm*color11: yellow
+xterm*color12: blue
+xterm*color13: magenta
+xterm*color14: cyan
+xterm*color15: white
+
+xterm*saveLines:       10000
+xterm*scrollBar:       false
+xterm*scrollKey:       true
+xterm*scrollTtyOutput: false
+
+xterm*fullscreen:      never
+xterm*internalBorder:  5
+xterm*loginShell:      true
+xterm*metaSendsEscape: true
+xterm*termName:        xterm-256color
+xterm*utf8:            always
+
+! enable OSC 52 so tmux can set clipboard
+!xterm*disallowedWindowOps: 20,21,SetXprop
+
+xterm*translations: #override \n\
+    Ctrl Shift <Key> C: copy-selection(CLIPBOARD) \n\
+    Ctrl Shift <Key> V: insert-selection(CLIPBOARD)

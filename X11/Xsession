@@ -1,0 +1,7 @@
+setxkbmap -layout us -variant intl
+
+xrdb -load $HOME/.config/X11/Xresources
+
+xsetroot -solid steelblue
+
+exec cwm -c $HOME/.config/cwm/cwmrc
