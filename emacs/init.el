@@ -195,12 +195,17 @@
         uniquify-trailing-separator-p t)
 
 ;;; Font
-(setopt x-underline-at-descent-line t)
-
-;;; Font
 (custom-theme-set-faces
  'user
  '(default ((t :font "Fira Code Retina-10"))))
+
+(setopt x-underline-at-descent-line t)
+
+;;; Font Lock
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (font-lock-mode 1)
+            (setq-local font-lock-keywords nil)))
 
 ;;; Theme
 (custom-theme-set-faces
