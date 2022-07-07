@@ -32,111 +32,6 @@
 
 (keymap-set global-map "C-z" user-prefix-map)
 
-;;; Dashboard
-(defcustom dashboard-buffer "*Dashboard*"
-  "The `dashboard' buffer name.")
-
-(defun dashboard--forward-button ()
-  (interactive)
-  (when (save-excursion
-          (re-search-backward (concat "^\\(?:" outline-regexp "\\)") nil t))
-    (outline-hide-subtree))
-  (forward-button 1 t)
-  (outline-show-subtree))
-
-(defun dashboard--backward-button ()
-  (interactive)
-  (when (save-excursion
-          (re-search-forward (concat "^\\(?:" outline-regexp "\\)") nil t))
-    (outline-hide-subtree))
-  (backward-button 1 t)
-  (outline-show-subtree))
-
-(defvar dashboard-mode-map
-  (let ((map (make-sparse-keymap)))
-    (keymap-set map "TAB" #'dashboard--forward-button)
-    (keymap-set map "<backtab>" #'dashboard--backward-button)
-    map)
-  "Keymap for `dashboard-mode'.")
-
-(define-derived-mode dashboard-mode
-  special-mode "Dashboard"
-  "Major mode of `dashboard'."
-  (setq-local revert-buffer-function #'dashboard
-              outline-regexp "[A-Z]"
-              outline-minor-mode-cycle t)
-  (outline-minor-mode 1)
-  (outline-cycle-buffer))
-
-(defun dashboard (&rest args)
-  "Create a dashboard buffer."
-  (interactive)
-  (when (length= command-line-args 1)
-    (let ((inhibit-read-only t)
-          (buffer (get-buffer-create dashboard-buffer)))
-      (with-current-buffer buffer
-        (erase-buffer)
-        (progn ; logo
-          (let ((image (create-image (expand-file-name "emacs.png" user-emacs-directory)
-                                     nil nil :scale 0.15)))
-            (insert (propertize " "
-                                'display
-                                `(space :align-to (+ center (-0.5 . ,image)))))
-            (insert-image image)))
-        (progn ; header
-          (let ((text (propertize "GNU Emacs" 'face 'default)))
-            (insert "\n"
-                    (propertize " "
-                                'display
-                                `(space :align-to (+ center (-0.5 . ,(string-width text)))))
-                    text)))
-        (progn ; system information
-          (insert "\n\n" (propertize "System Information:" 'face 'outline-1))
-          (insert "\n\t" (format "Emacs Version:	%s (%s %s)" emacs-version emacs-repository-branch emacs-repository-version))
-          (insert "\n\t" (format "Emacs PID:		%s" (emacs-pid)))
-          (insert "\n\t" "Init File:		")
-          (insert-text-button user-init-file
-                              'action
-                              (lambda (button) (find-file (button-label button))))
-          (insert "\n\t" (format "Init Time:		%s seconds" (emacs-init-time "%.2f")))
-          (insert "\n\t" (format "Packages:		%s" (length package-activated-list)))
-          (insert "\n\t" (format "Uptime:			%s" (emacs-uptime)))
-          (insert "\n\t" (format "GCs Done:		%s" gcs-done))
-          (insert "\n\t" (format "User Name:		%s" (user-login-name)))
-          (insert "\n\t" (format "Host Name:		%s" (system-name)))
-          (insert "\n\t" (format "Host Type:		%s" system-type))
-          (when-let* ((memory-info (memory-info))
-                      (total (/ (float (seq-elt memory-info 0)) (* 1024 1024)))
-                      (free  (/ (float (seq-elt memory-info 1)) (* 1024 1024)))
-                      (used  (- total free)))
-            (insert "\n\t" (format "Memory:			%.1f/%.1f GiB" used total))))
-        (progn ; projects
-          (require 'project)
-          (project--ensure-read-project-list)
-          (insert "\n\n" (propertize "Projects:" 'face 'outline-1))
-          (dolist (item (seq-map 'car project--list))
-            (insert "\n\t")
-            (insert-text-button item
-                                'action
-                                (lambda (button) (project-switch-project (button-label button))))))
-        (progn ; recent files
-          (require 'recentf)
-          (insert "\n\n" (propertize "Recent Files:" 'face 'outline-1))
-          (dolist (item recentf-list)
-            (insert "\n\t")
-            (insert-text-button item
-                                'action
-                                (lambda (button) (find-file (button-label button))))))
-        (dashboard-mode))
-      (switch-to-buffer buffer)
-      (beginning-of-buffer)
-      (search-forward-regexp "^[A-Z]")
-      (backward-char)
-      buffer)))
-
-(add-hook 'after-init-hook #'dashboard)
-(keymap-set user-prefix-map "<return>" #'dashboard)
-
 ;;; Commands
 (setopt disabled-command-function (lambda (&optional cmd keys)
                                     (message "Command %s disabled "
@@ -195,10 +90,6 @@
         uniquify-trailing-separator-p t)
 
 ;;; Font
-(custom-theme-set-faces
- 'user
- '(default ((t :font "Fira Code Retina-10"))))
-
 (setopt x-underline-at-descent-line t)
 
 ;;; Font Lock
@@ -617,21 +508,7 @@
   (add-hook hook #'outline-minor-mode))
 
 ;;; Shell
-(defun shell-run-cmd-dwim ()
-  "Run current line or region as a shell command and insert output in next line."
-  (interactive)
-  (require 'ansi-color)
-  (let* ((start (if (use-region-p) (region-beginning) (line-beginning-position)))
-         (end   (if (use-region-p) (region-end) (line-end-position)))
-         (cmd   (buffer-substring-no-properties start end)))
-    (save-excursion
-      (move-end-of-line 1)
-      (newline)
-      (insert (ansi-color-apply (shell-command-to-string cmd))))))
-
 (setopt shell-command-prompt-show-cwd t)
-
-(keymap-set user-prefix-map "!" #'shell-run-cmd-dwim)
 
 ;; Screenshot
 (defun take-screenshot ()
@@ -779,18 +656,6 @@
 
 (keymap-set user-prefix-map "l" #'launch-application)
 
-;;; Display Table
-(defface page-break
-  '((t :inherit default))
-  "Face for displaying a page break.")
-
-(when (display-graphic-p)
-  (unless standard-display-table
-    (setq-default standard-display-table (make-display-table)))
-  (let* ((glyph (make-glyph-code ?─ 'page-break))
-         (entry (vconcat (make-list fill-column glyph))))
-    (aset standard-display-table ?\^L entry)))
-
 ;;; Dired
 (setopt dired-listing-switches "-lhA"
         dired-do-revert-buffer t
@@ -871,8 +736,7 @@
   (interactive)
   (tab-bar-close-other-tabs)
   (delete-other-windows)
-  (dashboard)
-  (mapc #'kill-buffer (cdr (buffer-list))))
+  (mapc #'kill-buffer (buffer-list)))
 
 (keymap-set user-prefix-map "<escape>" #'emacs-cleanup)
 

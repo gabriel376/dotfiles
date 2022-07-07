@@ -1,3 +1,10 @@
 export EDITOR="emacs -nw"
+
 export ENV="$HOME/.config/ksh/kshrc"
+
 export PATH="$HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+export SSH_AUTH_SOCK="$HOME/.ssh/ssh_auth_sock"
+if [ ! -S "$SSH_AUTH_SOCK" ]; then
+    eval $(ssh-agent -s -a "$SSH_AUTH_SOCK")
+fi

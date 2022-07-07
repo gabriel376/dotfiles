@@ -1,3 +1,5 @@
+[[ $- != *i* ]] && return
+
 HISTCONTROL=ignoredups
 HISTFILE="$HOME/.config/ksh/ksh_history"
 HISTSIZE=10000
