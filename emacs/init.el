@@ -146,8 +146,11 @@
                          tab-bar-format-align-right
                          tab-bar-format-global))
 
+(advice-add 'tab-bar-tab-name-format-default :filter-return #'string-trim)
+
 (tab-bar-mode 1)
 (tab-bar-history-mode 1)
+(tab-bar-change-tab-group "main")
 
 ;;; Locale
 (set-locale-environment "en_US.UTF-8")
@@ -281,7 +284,6 @@
             "")
            (when repeat-in-progress " Repeat")
            (when (buffer-narrowed-p) " Narrow")
-           (when vc-mode (substring-no-properties vc-mode))
            " ")))
 
 (setopt mode-line-format '(:eval (let ((left   (mode-line--left))
@@ -510,27 +512,6 @@
 ;;; Shell
 (setopt shell-command-prompt-show-cwd t)
 
-;; Screenshot
-(defun take-screenshot ()
-  "Take a screenshot of the current Emacs frame and save it to a file."
-  (interactive)
-  (let* ((template "emacs-screenshot-%Y%m%dT%H%M%S.png")
-         (filename (read-file-name "Save as: "
-                                   nil
-                                   nil
-                                   nil
-                                   (format-time-string template)))
-         (extension (substring filename -3))
-         (extension (if (member extension '("png" "pdf" "svg"))
-                        extension
-                      (completing-read "Type: " '("pdf" "svg" "png") nil t)))
-         (data (x-export-frames nil (intern extension))))
-    (with-temp-file filename
-      (set-buffer-file-coding-system 'raw-text)
-      (insert data))
-    (kill-new filename)
-    (message (concat "Screenshot saved to " filename))))
-
 ;; Org
 (setopt org-catch-invisible-edits 'error
         org-M-RET-may-split-line nil
@@ -562,71 +543,6 @@
 (dolist (hook '(prog-mode-hook
                 org-mode-hook))
   (add-hook hook #'whitespace-mode))
-
-;;; Solar
-(defvar sunrise-hook nil
-  "Normal hook run at sunrise time.")
-
-(defvar sunset-hook nil
-  "Normal hook run at sunset time.")
-
-(defvar solar--sunrise-timer nil
-  "Timer for `sunrise-hook'.")
-
-(defvar solar--sunset-timer nil
-  "Timer for `sunset-hook'.")
-
-(defun solar--run-hooks ()
-  "Run `sunrise-hook' and `sunset-hook'."
-  (require 'solar)
-  (require 'subr-x)
-  (let* ((now (format-time-string "%H:%M" (current-time)))
-         (sunrise (thread-last
-                    (calendar-current-date)
-                    solar-sunrise-sunset
-                    car
-                    (apply #'solar-time-string)))
-         (sunset (thread-last
-                   (calendar-current-date)
-                   solar-sunrise-sunset
-                   cadr
-                   (apply #'solar-time-string))))
-    (when (timerp solar--sunrise-timer)
-      (cancel-timer solar--sunrise-timer)
-      (setq solar--sunrise-timer nil))
-    (when (timerp solar--sunset-timer)
-      (cancel-timer solar--sunset-timer)
-      (setq solar--sunset-timer nil))
-    (cond
-     ((string< now sunrise)
-      (progn
-        (run-hooks 'sunset-hook)
-        (setq solar--sunrise-timer
-              (run-at-time sunrise nil #'solar--run-hooks))))
-     ((string< now sunset)
-      (progn
-        (run-hooks 'sunrise-hook)
-        (setq solar--sunset-timer
-              (run-at-time sunset nil #'solar--run-hooks))))
-     (t
-      (progn
-        (let* ((now (parse-time-string now))
-               (sunrise (thread-last
-                          (calendar-current-date 1)
-                          solar-sunrise-sunset
-                          car
-                          (apply #'solar-time-string)
-                          parse-time-string))
-               (time (* 60
-                        (- (+ (* 60 (+ 24 (caddr sunrise)))
-                              (cadr sunrise))
-                           (+ (* 60 (caddr now))
-                              (cadr now))))))
-          (run-hooks 'sunset-hook)
-          (setq solar--sunrise-timer
-                (run-at-time time nil #'solar--run-hooks))))))))
-
-(add-hook 'after-init-hook #'solar--run-hooks)
 
 ;;; Eshell
 (require 'eshell)
@@ -741,31 +657,11 @@
 (keymap-set user-prefix-map "<escape>" #'emacs-cleanup)
 
 ;;; Ibuffer
-(defun ibuffer--set-filter-groups ()
-  "Set `ibuffer-filter-groups'."
-  (setq ibuffer-filter-groups
-        (append (thread-last (buffer-list)
-                             (mapcar (lambda (buffer)
-                                       (with-current-buffer buffer (vc-root-dir))))
-                             (delq nil)
-                             delete-dups
-                             (mapcar (lambda (project)
-                                       (let ((name      (file-name-nondirectory (directory-file-name project)))
-                                             (directory (expand-file-name project)))
-                                         `(,name (directory . ,directory))))))
-                '(("Dired" (mode . dired-mode))
-                  ("Shell" (or (mode . shell-mode)
-                               (mode . eshell-mode)
-                               (mode . term-mode)))
-                  ("Files" (visiting-file))
-                  ("**" (name . "\*.*\*"))))))
-
 (setopt ibuffer-display-summary nil
         ibuffer-show-empty-filter-groups nil
         ibuffer-default-sorting-mode 'alphabetic)
 
 (add-hook 'ibuffer-mode-hook #'ibuffer-auto-mode)
-(add-hook 'ibuffer-mode-hook 'ibuffer--set-filter-groups)
 
 (keymap-set ctl-x-map "C-b" #'ibuffer)
 
