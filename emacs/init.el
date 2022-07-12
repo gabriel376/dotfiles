@@ -164,7 +164,7 @@
 (set-locale-environment "en_US.UTF-8")
 
 ;;; Display Time
-(setopt display-time-string-forms '((format-time-string "%a %d/%m/%y %H:%M " now)))
+(setopt display-time-string-forms '((format-time-string "%Y-%m-%dT%H:%M:%S%z " now)))
 
 (display-time-mode 1)
 

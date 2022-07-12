@@ -1,0 +1,11 @@
+[[ $- != *i* ]] && return
+
+HISTCONTROL=ignoredups
+HISTFILE="$HOME/.config/bash/bash_history"
+HISTSIZE=10000
+PS1="\u@\H:\w \$ "
+
+set -o emacs
+stty -ixon
+
+shopt -s histappend
