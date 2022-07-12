@@ -90,13 +90,17 @@
         uniquify-trailing-separator-p t)
 
 ;;; Font
+(custom-theme-set-faces
+ 'user
+ '(default ((t (:font "monospace-10")))))
+
 (setopt x-underline-at-descent-line t)
 
 ;;; Font Lock
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (font-lock-mode 1)
-            (setq-local font-lock-keywords nil)))
+;(add-hook 'prog-mode-hook
+;          (lambda ()
+;            (font-lock-mode 1)
+;            (setq-local font-lock-keywords nil)))
 
 ;;; Theme
 (custom-theme-set-faces
@@ -140,6 +144,7 @@
 ;;; Tab Bar
 (setopt tab-bar-close-button-show nil
         tab-bar-tab-hints t
+        tab-bar-tab-name-function (cl-constantly "")
         tab-bar-tab-post-change-group-functions #'tab-bar-move-tab-to-group
         tab-bar-format '(tab-bar-format-tabs-groups
                          tab-bar-separator
@@ -151,6 +156,9 @@
 (tab-bar-mode 1)
 (tab-bar-history-mode 1)
 (tab-bar-change-tab-group "main")
+
+;;; Ruby
+(setopt ruby-align-chained-calls t)
 
 ;;; Locale
 (set-locale-environment "en_US.UTF-8")
@@ -487,6 +495,101 @@
                               ("M--" decrease-number-at-point)))
   (keymap-set user-prefix-map key cmd))
 
+;;; Checkpoints
+(defvar checkpoints--list '())
+
+(defvar checkpoints--index -1)
+
+(defun checkpoints--update ()
+  (setq checkpoints--list (seq-filter #'overlay-buffer checkpoints--list)))
+
+(defun checkpoints--goto (index)
+  (if-let (overlay (seq-elt checkpoints--list index))
+      (progn
+        (pop-to-buffer (overlay-buffer overlay))
+        (goto-char (overlay-start overlay))
+        (message "Checkpoint %s/%s" (1+ index) (length checkpoints--list)))
+    (message "No checkpoints")))
+
+(defun checkpoints-toggle (arg)
+  (interactive "P")
+  (if-let (overlay (seq-find (lambda (overlay)
+                               (equal (overlay-get overlay 'category) 'checkpoint))
+                             (overlays-at (point))))
+      (progn
+        (delete-overlay overlay)
+        (setq checkpoints--list (remove overlay checkpoints--list))
+        (message "Checkpoint removed"))
+    (let ((overlay (make-overlay (line-beginning-position) (line-end-position))))
+      (overlay-put overlay 'category 'checkpoint)
+      (overlay-put overlay 'face 'highlight)
+      (overlay-put overlay 'evaporate t)
+      (setq checkpoints--list (if (and arg (<= arg (length checkpoints--list)))
+                                  (append (seq-subseq checkpoints--list 0 (1- arg))
+                                          (list overlay)
+                                          (seq-subseq checkpoints--list (1- arg)))
+                                (append checkpoints--list (list overlay))))
+      (deactivate-mark)
+      (message "Checkpoint added"))))
+
+(defun checkpoints-clear ()
+  (interactive)
+  (dolist (overlay checkpoints--list)
+    (delete-overlay overlay))
+  (setq checkpoints--list '())
+  (message "Checkpoints cleared"))
+
+(defun checkpoints-next ()
+  (interactive)
+  (checkpoints--update)
+  (setq checkpoints--index (1+ checkpoints--index))
+  (when (>= checkpoints--index (length checkpoints--list))
+    (setq checkpoints--index 0))
+  (checkpoints--goto checkpoints--index))
+
+(defun checkpoints-previous ()
+  (interactive)
+  (checkpoints--update)
+  (setq checkpoints--index (1- checkpoints--index))
+  (when (< checkpoints--index 0)
+    (setq checkpoints--index (1- (length checkpoints--list))))
+  (checkpoints--goto checkpoints--index))
+
+(defun checkpoints-select ()
+  (interactive)
+  (checkpoints--update)
+  (if-let (completions (seq-map-indexed (lambda (overlay index)
+                                          (with-current-buffer (overlay-buffer overlay)
+                                            (format "[%d]  %s  %s"
+                                                    (1+ index)
+                                                    (buffer-name)
+                                                    (buffer-substring (overlay-start overlay) (overlay-end overlay)))))
+                                        checkpoints--list))
+      (let* ((key (completing-read (format-prompt "Checkpoint" nil)
+                                   (lambda (string predicate action)
+                                     (if (eq action 'metadata)
+                                         `(metadata (cycle-sort-function . ,#'identity))
+                                       (complete-with-action action
+                                                             (seq-sort 'string< completions)
+                                                             string
+                                                             predicate)))
+                                   nil
+                                   t))
+             (index (save-match-data
+                      (and (string-match "\\[\\([0-9]+\\)\\]" key)
+                           (1- (string-to-number (match-string 1 key))))))
+             (overlay (seq-elt checkpoints--list index)))
+        (setq checkpoints--index index)
+        (checkpoints--goto index))
+    (message "No checkpoints")))
+
+(pcase-dolist (`(,key ,cmd) '(("c c" checkpoints-toggle)
+                              ("c SPC" checkpoints-select)
+                              ("c <left>" checkpoints-previous)
+                              ("c <right>" checkpoints-next)
+                              ("c <backspace>" checkpoints-clear)))
+  (keymap-set user-prefix-map key cmd))
+
 ;;; Bidirectional Display
 (setopt bidi-paragraph-direction 'left-to-right
         bidi-inhibit-bpa t)
@@ -501,11 +604,12 @@
 ;;; Outline
 (setopt outline-default-state nil
         outline-minor-mode-cycle t
-        outline-minor-mode-highlight t
         outline-minor-mode-use-buttons nil
+        outline-minor-mode-cycle-filter 'bolp
         outline-minor-mode-buttons '(("▶" "▼" outline--valid-char-p)))
 
 (dolist (hook '(diff-mode-hook
+                prog-mode-hook
                 xref-after-update-hook))
   (add-hook hook #'outline-minor-mode))
 
