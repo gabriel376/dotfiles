@@ -29,7 +29,7 @@ xterm*color13: #b6a0ff
 xterm*color14: #6ae4b9
 xterm*color15: #ffffff
 
-xterm*saveLines:       10000
+xterm*saveLines:       32768
 xterm*scrollBar:       false
 xterm*scrollKey:       true
 xterm*scrollTtyOutput: false

@@ -1,9 +1,9 @@
 [[ $- != *i* ]] && return
 
-HISTCONTROL=ignoredups
+HISTCONTROL="ignoredups"
 HISTFILE="$HOME/.config/ksh/ksh_history"
-HISTSIZE=10000
-PS1="\u@\H:\w \$ "
+HISTSIZE="32768"
+PS1="\n\u@\H:\w\n\$ "
 
 set -o emacs
 stty -ixon

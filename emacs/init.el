@@ -171,11 +171,11 @@
 ;;; Kill
 (setopt save-interprogram-paste-before-kill t
         kill-do-not-save-duplicates t
-        kill-ring-max 100)
+        kill-ring-max 128)
 
 ;;; Yank
 (setopt mouse-yank-at-point t
-        yank-menu-max-items 100)
+        yank-menu-max-items 128)
 
 ;;; Mark
 (setopt shift-select-mode nil)
@@ -261,7 +261,7 @@
 (keymap-set user-prefix-map "C-z" #'pulse-current-line)
 
 ;;; Messages
-(setopt messages-buffer-max-lines 10000)
+(setopt messages-buffer-max-lines 32768)
 
 ;;; Mode Line
 (defun mode-line--left ()
@@ -699,7 +699,7 @@
         use-file-dialog nil)
 
 ;;; Recentf
-(setopt recentf-max-saved-items 100
+(setopt recentf-max-saved-items 128
         recentf-show-file-shortcuts-flag nil)
 
 (recentf-mode 1)
