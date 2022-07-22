@@ -41,6 +41,6 @@ xterm*metaSendsEscape: true
 xterm*termName:        xterm-256color
 xterm*utf8:            always
 
-xterm*translations: #override \n\
+*vt100*translations: #override \n\
     Ctrl Shift <Key> C: copy-selection(CLIPBOARD) \n\
     Ctrl Shift <Key> V: insert-selection(CLIPBOARD)

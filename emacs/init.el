@@ -10,32 +10,21 @@
         inhibit-startup-screen t)
 
 ;;; Packages
-(setopt package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+(setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                            ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                           ("melpa"  . "https://melpa.org/packages/"))
+                           ("melpa" . "https://melpa.org/packages/"))
         package-selected-packages '()
         package-user-dir (expand-file-name "packages" user-emacs-directory))
 
 (package-install-selected-packages t)
 (package-activate-all)
 
-;;; Keys
-(defvar user-prefix-map
-  (make-sparse-keymap)
-  "Keymap for user commands.")
-
-(setopt translate-upper-case-key-bindings nil)
-
-(dolist (key '("C-z"
-               "C-x C-d"))
-  (keymap-global-unset key))
-
-(keymap-set global-map "C-z" user-prefix-map)
-
 ;;; Commands
-(setopt disabled-command-function (lambda (&optional cmd keys)
-                                    (message "Command %s disabled "
-                                             (or cmd this-command))))
+(defun ignore-command (&optional cmd keys)
+  (message "Command %s is disabled "
+           (or cmd this-command)))
+
+(setopt disabled-command-function #'ignore-command)
 
 ;;; Overwrite
 (put 'overwrite-mode 'disabled t)
@@ -92,15 +81,9 @@
 ;;; Font
 (custom-theme-set-faces
  'user
- '(default ((t (:font "monospace-10")))))
+ '(default ((t (:font "monospace-11")))))
 
 (setopt x-underline-at-descent-line t)
-
-;;; Font Lock
-;(add-hook 'prog-mode-hook
-;          (lambda ()
-;            (font-lock-mode 1)
-;            (setq-local font-lock-keywords nil)))
 
 ;;; Theme
 (custom-theme-set-faces
@@ -127,6 +110,20 @@
 
 (repeat-mode 1)
 
+;;; Environment Variables
+(seq-map (lambda (line)
+           (when-let ((index (seq-position line ?=)))
+             (setenv (substring line 0 index)
+                     (substring line (1+ index)))))
+         (thread-last (getenv "SHELL")
+                      (format "%s -i -l -c 'env' 2>/dev/null")
+                      shell-command-to-string
+                      string-lines))
+
+(setopt exec-path
+        (append (split-string (getenv "PATH") ":")
+                (list exec-directory)))
+
 ;;; Buffer
 (keymap-set ctl-x-map "k" #'kill-current-buffer)
 
@@ -142,6 +139,20 @@
 (window-divider-mode 1)
 
 ;;; Tab Bar
+(defun tab-bar-tab-name-format-default (tab i)
+  (let ((current-p (eq (car tab) 'current-tab)))
+    (propertize
+     (format " %s " (string-trim (format "%d %s" i (alist-get 'name tab))))
+     'face (funcall tab-bar-tab-face-function tab))))
+
+(defun tab-bar-tab-group-format-default (tab i)
+  (propertize
+   (format " %s " (string-trim (format "%d%s" i (funcall tab-bar-tab-group-function tab))))
+   'face 'tab-bar-tab-group-inactive))
+
+(defun tab-bar-tab-group-default (tab)
+  (format " %s " (alist-get 'group tab)))
+
 (setopt tab-bar-close-button-show nil
         tab-bar-tab-hints t
         tab-bar-tab-name-function (cl-constantly "")
@@ -150,8 +161,6 @@
                          tab-bar-separator
                          tab-bar-format-align-right
                          tab-bar-format-global))
-
-(advice-add 'tab-bar-tab-name-format-default :filter-return #'string-trim)
 
 (tab-bar-mode 1)
 (tab-bar-history-mode 1)
@@ -164,7 +173,8 @@
 (set-locale-environment "en_US.UTF-8")
 
 ;;; Display Time
-(setopt display-time-string-forms '((format-time-string "%Y-%m-%dT%H:%M:%S%z " now)))
+(setopt display-time-interval 1
+        display-time-string-forms '((format-time-string "%a, %d/%b/%Y %H:%M:%S %Z " now)))
 
 (display-time-mode 1)
 
@@ -258,8 +268,6 @@
   (interactive)
   (pulse-momentary-highlight-one-line (point) 'region))
 
-(keymap-set user-prefix-map "C-z" #'pulse-current-line)
-
 ;;; Messages
 (setopt messages-buffer-max-lines 32768)
 
@@ -327,12 +335,6 @@
 
 (dolist (hook '(prog-mode-hook))
   (add-hook hook #'hs-minor-mode))
-
-(pcase-dolist (`(,key ,cmd) '(("C-+" hs-show-all)
-                              ("C-_" hs-hide-all)
-                              ("C-=" hs-show-block)
-                              ("C--" hs-hide-block)))
-  (keymap-set user-prefix-map key cmd))
 
 ;;; Save Hist
 (setopt savehist-autosave-interval nil
@@ -416,8 +418,6 @@
 
 (setopt delete-pair-blink-delay 0)
 
-(keymap-set user-prefix-map "p" #'edit-pair-dwim)
-
 ;;; Duplicate
 (defun duplicate-text-dwim (arg)
   "Duplicate current line or region."
@@ -437,8 +437,6 @@
         (setq end (point)))
       (goto-char (+ origin (* (length region) arg) arg)))))
 
-(keymap-set user-prefix-map "d" #'duplicate-text-dwim)
-
 ;; Case
 (defun edit-case-dwim ()
   "Edit current word or region case."
@@ -455,8 +453,6 @@
       (funcall fn 1)
       (setq deactivate-mark nil))))
 
-(keymap-set user-prefix-map "x" #'edit-case-dwim)
-
 ;;; Edit char at point
 (defun increase-char-at-point (arg)
   "Increase char at point."
@@ -469,10 +465,6 @@
   "Decrease char at point."
   (interactive "p")
   (increase-char-at-point (* -1 arg)))
-
-(pcase-dolist (`(,key ,cmd) '(("C-M-=" increase-char-at-point)
-                              ("C-M--" decrease-char-at-point)))
-  (keymap-set user-prefix-map key cmd))
 
 ;;; Edit number at point
 (defun increase-number-at-point (arg)
@@ -490,10 +482,6 @@
   "Decrease number at point."
   (interactive "p")
   (increase-number-at-point (* -1 arg)))
-
-(pcase-dolist (`(,key ,cmd) '(("M-=" increase-number-at-point)
-                              ("M--" decrease-number-at-point)))
-  (keymap-set user-prefix-map key cmd))
 
 ;;; Checkpoints
 (defvar checkpoints--list '())
@@ -583,12 +571,17 @@
         (checkpoints--goto index))
     (message "No checkpoints")))
 
-(pcase-dolist (`(,key ,cmd) '(("c c" checkpoints-toggle)
-                              ("c SPC" checkpoints-select)
-                              ("c <left>" checkpoints-previous)
-                              ("c <right>" checkpoints-next)
-                              ("c <backspace>" checkpoints-clear)))
-  (keymap-set user-prefix-map key cmd))
+
+(defvar-keymap checkpoints-map
+  :doc "Keymap for checkpoints commands."
+  "RET" #'checkpoints-toggle
+  "SPC" #'checkpoints-select
+  "<left>" #'checkpoints-previous
+  "<right>" #'checkpoints-next
+  "<backspace>" #'checkpoints-clear)
+
+(put 'checkpoints-previous 'repeat-map 'checkpoints-map)
+(put 'checkpoints-next 'repeat-map 'checkpoints-map)
 
 ;;; Bidirectional Display
 (setopt bidi-paragraph-direction 'left-to-right
@@ -635,8 +628,6 @@
         org-checkbox-hierarchical-statistics nil
         org-todo-keywords '((sequence "TODO" "DOING" "WAIT" "|" "DONE" "CANCEL")))
 
-(keymap-set user-prefix-map "a" #'org-agenda)
-
 ;;; Whitespace
 (setopt whitespace-style '(face
                            trailing
@@ -673,8 +664,6 @@
   (interactive)
   (call-process-shell-command (read-shell-command "Launch application: ")
                               nil 0 nil))
-
-(keymap-set user-prefix-map "l" #'launch-application)
 
 ;;; Dired
 (setopt dired-listing-switches "-lhA"
@@ -732,24 +721,6 @@
 (setopt windmove-create-window t
         windmove-wrap-around t)
 
-(pcase-dolist (`(,key ,cmd) '(("<left>" windmove-left)
-                              ("<right>" windmove-right)
-                              ("<up>" windmove-up)
-                              ("<down>" windmove-down)
-                              ("C-<left>" windmove-display-left)
-                              ("C-<right>" windmove-display-right)
-                              ("C-<up>" windmove-display-up)
-                              ("C-<down>" windmove-display-down)
-                              ("M-<left>" windmove-swap-states-left)
-                              ("M-<right>" windmove-swap-states-right)
-                              ("M-<up>" windmove-swap-states-up)
-                              ("M-<down>" windmove-swap-states-down)
-                              ("C-M-<left>" windmove-delete-left)
-                              ("C-M-<right>" windmove-delete-right)
-                              ("C-M-<up>" windmove-delete-up)
-                              ("C-M-<down>" windmove-delete-down)))
-  (keymap-set user-prefix-map key cmd))
-
 ;;; Cleanup
 (defun emacs-cleanup ()
   "Do cleanup by killing buffers, tabs and windows."
@@ -757,8 +728,6 @@
   (tab-bar-close-other-tabs)
   (delete-other-windows)
   (mapc #'kill-buffer (buffer-list)))
-
-(keymap-set user-prefix-map "<escape>" #'emacs-cleanup)
 
 ;;; Ibuffer
 (setopt ibuffer-display-summary nil
@@ -802,3 +771,64 @@
         gnus-sum-thread-tree-leaf-with-other "├► "
         gnus-sum-thread-tree-single-leaf "╰► "
         gnus-sum-thread-tree-vertical "│")
+
+;;; Keys
+(setopt translate-upper-case-key-bindings nil)
+
+(defvar-keymap user-map
+  :doc "Keymap for user commands."
+
+  "a" #'org-agenda
+  "c" checkpoints-map
+  "d" #'duplicate-text-dwim
+  "l" #'launch-application
+  "p" #'edit-pair-dwim
+  "x" #'edit-case-dwim
+
+  "<escape>" #'emacs-cleanup
+
+  "<left>" #'windmove-left
+  "<right>" #'windmove-right
+  "<up>" #'windmove-up
+  "<down>" #'windmove-down
+
+  "C-z" #'pulse-current-line
+
+  "C-+" #'hs-show-all
+  "C-_" #'hs-hide-all
+  "C-=" #'hs-show-block
+  "C--" #'hs-hide-block
+
+  "C-<left>" #'windmove-display-left
+  "C-<right>" #'windmove-display-right
+  "C-<up>" #'windmove-display-up
+  "C-<down>" #'windmove-display-down
+
+  "M-=" #'increase-number-at-point
+  "M--" #'decrease-number-at-point
+
+  "M-<left>" #'windmove-swap-states-left
+  "M-<right>" #'windmove-swap-states-right
+  "M-<up>" #'windmove-swap-states-up
+  "M-<down>" #'windmove-swap-states-down
+
+  "C-M-=" #'increase-char-at-point
+  "C-M--" #'decrease-char-at-point
+
+  "C-M-<left>" #'windmove-delete-left
+  "C-M-<right>" #'windmove-delete-right
+  "C-M-<up>" #'windmove-delete-up
+  "C-M-<down>" #'windmove-delete-down)
+
+(put 'duplicate-text-dwim 'repeat-map 'user-map)
+(put 'edit-pair-dwim 'repeat-map 'user-map)
+(put 'edit-case-dwim 'repeat-map 'user-map)
+
+(put 'windmove-left 'repeat-map 'user-map)
+(put 'windmove-right 'repeat-map 'user-map)
+(put 'windmove-up 'repeat-map 'user-map)
+(put 'windmove-down 'repeat-map 'user-map)
+
+(put 'increase-char-at-point 'repeat-map 'user-map)
+
+(keymap-set global-map "C-z" user-map)

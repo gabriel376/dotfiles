@@ -2,5 +2,6 @@ set blink-matching-paren      on
 set colored-completion-prefix on
 set completion-display-width  0
 set completion-query-items    0
+set page-completions          off
 set show-all-if-ambiguous     on
 set skip-completed-text       on
